@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Client { // Owner of website (mom)
+  id           String        @id @default(uuid())
+  name         String
+  aboutMe      String
+  email        String
+  // One-to-many relationships (client can have many...)
+  services     Service[]
+  testimonials Testimonial[]
+  blogPosts    BlogPost[]
+}
+
+model Service { // Services offered by Client
+  id          String        @id @default(uuid())
+  title       String
+  description String
+  price       Float
+  Appointment Appointment[] //One-to-many with Appointment model
+  Client      Client?       @relation(fields: [clientId], references: [id]) //foreign key pointing to Client model
+  clientId    String?
+}
+
+model Appointment {
+  id              String   @id @default(uuid())
+  clientFirstName String
+  clientLastName  String
+  email           String
+  phone           String?
+  date            DateTime
+  serviceId       String //Foreign Key linking Service model. Appointments are tied to services
+  service         Service  @relation(fields: [serviceId], references: [id])
+  states          String   @default("pending") // could change to "confirmed" or "cancelled"
+}
+
+model ContactRequest { // For Client's clients to contact Client
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model Testimonial {
+  id       String  @id @default(uuid())
+  title    String
+  author   String
+  content  String
+  Client   Client? @relation(fields: [clientId], references: [id]) //Relation to Client model
+  clientId String? //Foreign key
+}
+
+model BlogPost {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  Client    Client?  @relation(fields: [clientId], references: [id])//Relation to Client model
+  clientId  String?
+  createdAt DateTime @default(now())
+}

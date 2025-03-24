@@ -7,6 +7,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import routes from "./routes/index";
+import bodyParser from "body-parser";
 
 // Loading env files from .env
 dotenv.config();
@@ -20,7 +21,8 @@ app.use(cors()); //enable CORS
 app.use(helmet()); // add security headers
 app.use(morgan("dev")); // Log HTTP requests
 app.use(express.json()); //For parsing JSON request bodies
-app.use(urlencoded({ extended: true})) // Parse URL-encoded data
+app.use(bodyParser.urlencoded({ extended: true})) // Parse URL-encoded data
+//app.use(bodyParser()) // Parse incoming request bodies in a middleware before your handlers, available under the req.body property.
 
 // Rate Limiting to prevent abuse (100 req/15 mins)
 const limiter = rateLimit({
