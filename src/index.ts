@@ -16,7 +16,7 @@ dotenv.config();
 // Initializing Express Application
 const app: Application = express();
 const prisma = new PrismaClient()
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Security + Middleware
 app.use(cors()); //enable CORS

@@ -1,21 +1,20 @@
-import express, { Request, Response } from 'express';  // Explicitly import Request and Response
+import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
 const contactRouter = express.Router();
 const prisma = new PrismaClient();
 
-// Create an interface for the request body
 interface ContactRequestBody {
   name: string;
   email: string;
   message: string;
 }
 
-contactRouter.post('/', async (req: Request<{}, {}, ContactRequestBody>, res: Response) => {
-  const { name, email, message } = req.body;
+contactRouter.post('/', async (req: Request, res: Response) => {
+  const { name, email, message } = req.body as ContactRequestBody;
 
   if (!name || !email || !message) {
-    return res.status(400).json({ message: 'All fields are required' });
+    res.status(400).json({ message: 'All fields are required' });
   }
 
   try {

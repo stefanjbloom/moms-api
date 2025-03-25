@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 clientRouter.get('/', async (req, res) => {
   try {
     const client = await prisma.client.findUnique({
-      where: { id: '1' },
+      where: { id: process.env.SEEDED_CLIENT_ID },
       include: {
         services: true,
         testimonials: true,
