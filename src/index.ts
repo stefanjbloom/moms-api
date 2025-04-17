@@ -54,3 +54,5 @@ process.on("SIGTERM", async () => {
 
 // Start express server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+
+export { app };
