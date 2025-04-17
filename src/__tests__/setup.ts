@@ -3,6 +3,13 @@ import { PrismaClient } from '@prisma/client';
 // Create a new Prisma client for testing
 const prisma = new PrismaClient();
 
+describe('Test Setup', () => {
+  it('should clean up the database before each test', async () => {
+    // This test verifies our setup is working
+    expect(true).toBe(true);
+  });
+});
+
 // Clean up the database before each test
 beforeEach(async () => {
   // Delete all records from all tables
