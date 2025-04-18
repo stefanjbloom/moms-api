@@ -1,18 +1,9 @@
 import request from 'supertest';
 import { app } from '../index';
 import { PrismaClient } from '@prisma/client';
-import { Server } from 'http';
+import '../__tests__/setup';
 
 const prisma = new PrismaClient();
-let server: Server;
-
-beforeAll((done) => {
-  server = app.listen(5002, done);
-});
-
-afterAll((done) => {
-  server.close(done);
-});
 
 describe('Service Routes', () => {
   // Test data
