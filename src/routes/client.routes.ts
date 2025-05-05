@@ -6,19 +6,41 @@ const prisma = new PrismaClient();
 
 // Helper function to get the client ID based on environment
 const getClientId = async () => {
+  console.log('Environment:', process.env.NODE_ENV);
+  console.log('SEEDED_CLIENT_ID:', process.env.SEEDED_CLIENT_ID);
+  
   // In test environment, always use the first client
   if (process.env.NODE_ENV === 'test') {
     const firstClient = await prisma.client.findFirst();
+    console.log('Test environment - First client ID:', firstClient?.id);
     return firstClient?.id;
   }
-  // In production, use SEEDED_CLIENT_ID until we have a better way to handle this.  PUT clients info in production and database.
-  return process.env.SEEDED_CLIENT_ID;
+  
+  // In production, first try to find the seeded client
+  if (process.env.SEEDED_CLIENT_ID) {
+    const seededClient = await prisma.client.findUnique({
+      where: { id: process.env.SEEDED_CLIENT_ID }
+    });
+    console.log('Production - Seeded client found:', !!seededClient);
+    if (seededClient) {
+      return seededClient.id;
+    }
+  }
+  
+  // If no seeded client exists, fall back to the first client
+  const firstClient = await prisma.client.findFirst();
+  console.log('Fallback - First client ID:', firstClient?.id);
+  return firstClient?.id;
 };
 
 clientRouter.get('/', async (req, res) => {
   try {
+    console.log('GET /api/client - Starting request');
     const clientId = await getClientId();
+    console.log('GET /api/client - Client ID:', clientId);
+    
     if (!clientId) {
+      console.log('GET /api/client - No client ID found');
       res.status(404).json({ error: 'Client not found' });
       return;
     }
@@ -33,13 +55,15 @@ clientRouter.get('/', async (req, res) => {
     });
 
     if (!client) {
+      console.log('GET /api/client - Client not found in database');
       res.status(404).json({ error: 'Client not found' });
       return;
     }
 
+    console.log('GET /api/client - Successfully found client');
     res.json(client);
   } catch (error) {
-    console.error(error);
+    console.error('GET /api/client - Error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
