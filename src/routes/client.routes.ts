@@ -1,5 +1,6 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import { validateClient } from '../validations/client.validation';
 
 const clientRouter = express.Router();
 const prisma = new PrismaClient();
@@ -68,15 +69,8 @@ clientRouter.get('/', async (req, res) => {
   }
 });
 
-clientRouter.put('/', async (req, res) => {
+clientRouter.put('/', validateClient, async (req, res) => {
   try {
-    const { name, aboutMe, email } = req.body;
-    
-    if (!name || !aboutMe || !email) {
-      res.status(400).json({ error: 'Missing required fields' });
-      return;
-    }
-
     const clientId = await getClientId();
     if (!clientId) {
       res.status(404).json({ error: 'Client not found' });
@@ -85,7 +79,7 @@ clientRouter.put('/', async (req, res) => {
 
     const client = await prisma.client.update({
       where: { id: clientId },
-      data: { name, aboutMe, email },
+      data: req.body,
     });
 
     res.json(client);
