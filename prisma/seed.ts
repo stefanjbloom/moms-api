@@ -40,7 +40,7 @@ async function main() {
         create: [
           {
             title: "How to Choose the Right Service",
-            content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit...",
+            content: "This is a test content for the blog post.",
           },
           {
             title: "Maximizing Your Investment",

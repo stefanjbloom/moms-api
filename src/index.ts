@@ -16,7 +16,7 @@ dotenv.config();
 // Initializing Express Application
 const app: Application = express();
 const prisma = new PrismaClient()
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.NODE_ENV === 'test' ? 5002 : process.env.PORT || 5001;
 
 // Security + Middleware
 app.use(cors()); //enable CORS
@@ -52,5 +52,11 @@ process.on("SIGTERM", async () => {
   process.exit();
 });
 
-// Start express server
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+// Start express server only in non-test environment
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+export { app };
