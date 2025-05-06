@@ -1,21 +1,22 @@
 import express, { Request, Response, Router } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { validateService } from '../validations/service.validation';
 
 const serviceRouter: Router = express.Router();
 const prisma = new PrismaClient();
 
 // Create a new service
-serviceRouter.post('/', async (req: Request, res: Response) => {
+serviceRouter.post('/', validateService, async (req: Request, res: Response) => {
   try {
-    const { title, description, price } = req.body;
+    const { title, description, price, clientId } = req.body;
     
-    if (!title || !description || !price) {
-      res.status(400).json({ error: 'Missing required fields' });
-      return;
-    }
-
     const service = await prisma.service.create({
-      data: { title, description, price }
+      data: { 
+        title, 
+        description, 
+        price,
+        clientId 
+      }
     });
     res.status(201).json(service);
   } catch (error) {
@@ -55,7 +56,7 @@ serviceRouter.get('/:id', async (req: Request, res: Response) => {
 });
 
 // Update a service
-serviceRouter.put('/:id', async (req: Request, res: Response) => {
+serviceRouter.put('/:id', validateService, async (req: Request, res: Response) => {
   try {
     const { title, description, price } = req.body;
     const service = await prisma.service.update({

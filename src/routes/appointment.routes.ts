@@ -1,19 +1,15 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { validateAppointment, validateAppointmentConfirmation } from '../validations/appointment.validation';
 
 const appointmentRouter = express.Router();
 const prisma = new PrismaClient();
 
 // Create a new appointment
-appointmentRouter.post('/', async (req: Request, res: Response) => {
+appointmentRouter.post('/', validateAppointment, async (req: Request, res: Response) => {
   try {
     const { clientFirstName, clientLastName, email, phone, date, serviceId } = req.body;
     
-    if (!clientFirstName || !clientLastName || !email || !phone || !date || !serviceId) {
-      res.status(400).json({ error: 'Missing required fields' });
-      return;
-    }
-
     // Check if service exists
     const service = await prisma.service.findUnique({
       where: { id: serviceId }
@@ -73,7 +69,7 @@ appointmentRouter.get('/:id', async (req: Request, res: Response) => {
 });
 
 // Update an appointment
-appointmentRouter.put('/:id', async (req: Request, res: Response) => {
+appointmentRouter.put('/:id', validateAppointment, async (req: Request, res: Response) => {
   try {
     const { clientFirstName, clientLastName, email, phone, date } = req.body;
     const appointment = await prisma.appointment.update({
@@ -94,7 +90,7 @@ appointmentRouter.put('/:id', async (req: Request, res: Response) => {
 });
 
 // Confirm appointment (update state after payment)
-appointmentRouter.put('/:id/confirm', async (req: Request, res: Response) => {
+appointmentRouter.put('/:id/confirm', validateAppointmentConfirmation, async (req: Request, res: Response) => {
   try {
     const { paymentStatus } = req.body;
     
