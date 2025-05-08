@@ -1,6 +1,6 @@
 //Main Starting point for app
 
-import express, { Application, Request, Response } from "express";
+import express, { Application, Request, Response, NextFunction, ErrorRequestHandler } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet";
@@ -12,6 +12,7 @@ import { apiLimiter } from "./middleware/rateLimit";
 import { xss } from 'express-xss-sanitizer';
 import hpp from 'hpp';
 import cookieParser from 'cookie-parser';
+import { errorHandler } from './middleware/errorHandler';
 
 // Loading env files from .env
 dotenv.config();
@@ -28,7 +29,7 @@ const corsOptions = {
     ? process.env.FRONTEND_URL 
     : ['http://localhost:3000', 'http://localhost:5001'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-key'],
   credentials: true,
   maxAge: 86400 // 24 hours
 };
@@ -89,16 +90,13 @@ app.get("/", (req: Request, res: Response) => {
   res.json({ message: "API is running" });
 });
 
-// Error handling middleware
-app.use((err: Error, req: Request, res: Response, next: Function) => {
-  console.error(err.stack);
-  res.status(500).json({
-    status: 'error',
-    message: process.env.NODE_ENV === 'production' 
-      ? 'Internal server error' 
-      : err.message
-  });
+// 404 handler for non-existent routes
+app.use('*', (req: Request, res: Response) => {
+  res.status(404).json({ error: 'Resource not found' });
 });
+
+// Error handling middleware
+app.use(errorHandler as ErrorRequestHandler);
 
 // Graceful Shutdown for Prisma
 process.on("SIGINT", async () => {
