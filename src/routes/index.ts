@@ -4,15 +4,19 @@ import express from "express";
 import clientRouter from './client.routes';
 import serviceRouter from './service.routes';
 import appointmentRouter from './appointment.routes';
-import contactRouter from './contact.routes';
+import testimonialRouter from './testimonial.routes';
+import blogPostRouter from './blogPost.routes';
+import { adminAuth } from '../middleware/auth';
 
 const router = express.Router();
 
-//Mounting of routes
+// Public routes (no authentication needed)
+router.use('/appointments', appointmentRouter);
 
-router.use('/client', clientRouter)
-router.use('/services', serviceRouter)
-router.use('/appointments', appointmentRouter)
-router.use('/contact', contactRouter)
+// Protected routes (require admin authentication)
+router.use('/services', adminAuth, serviceRouter);
+router.use('/client', adminAuth, clientRouter);
+router.use('/testimonials', adminAuth, testimonialRouter);
+router.use('/blog', adminAuth, blogPostRouter);
 
 export default router;

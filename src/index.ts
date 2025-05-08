@@ -5,40 +5,99 @@ import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet";
 import morgan from "morgan";
-import rateLimit from "express-rate-limit";
 import routes from "./routes/index";
 import bodyParser from "body-parser";
 import { PrismaClient } from "@prisma/client";
+import { apiLimiter } from "./middleware/rateLimit";
+import { xss } from 'express-xss-sanitizer';
+import hpp from 'hpp';
+import cookieParser from 'cookie-parser';
 
 // Loading env files from .env
 dotenv.config();
 
 // Initializing Express Application
 const app: Application = express();
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 const PORT = process.env.NODE_ENV === 'test' ? 5002 : process.env.PORT || 5001;
 
 // Security + Middleware
-app.use(cors()); //enable CORS
-app.use(helmet()); // add security headers
-app.use(morgan("dev")); // Log HTTP requests
-app.use(express.json()); //For parsing JSON request bodies
-app.use(bodyParser.urlencoded({ extended: true})) // Parse URL-encoded data
+// CORS configuration
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL 
+    : ['http://localhost:3000', 'http://localhost:5001'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  maxAge: 86400 // 24 hours
+};
+app.use(cors(corsOptions));
 
-// Rate Limiting to prevent abuse (100 req/15 mins)
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: "Too many requests, try again later."
-});
-app.use(limiter);
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  crossOriginEmbedderPolicy: true,
+  crossOriginOpenerPolicy: true,
+  crossOriginResourcePolicy: { policy: "same-site" },
+  dnsPrefetchControl: { allow: false },
+  frameguard: { action: "deny" },
+  hidePoweredBy: true,
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  ieNoOpen: true,
+  noSniff: true,
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  xssFilter: true
+}));
+
+// Request logging
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+
+// Body parsing
+app.use(express.json({ limit: '10kb' })); // Limit body size
+app.use(bodyParser.urlencoded({ extended: true, limit: '10kb' }));
+app.use(cookieParser());
+
+// Security middleware
+app.use(xss()); // Modern XSS protection
+app.use(hpp()); // Prevent HTTP Parameter Pollution
+
+// Rate limiting
+app.use('/api', apiLimiter);
 
 // Register routes
-app.use("/api", routes)
+app.use("/api", routes);
 
 //Base route check
 app.get("/", (req: Request, res: Response) => {
   res.json({ message: "API is running" });
+});
+
+// Error handling middleware
+app.use((err: Error, req: Request, res: Response, next: Function) => {
+  console.error(err.stack);
+  res.status(500).json({
+    status: 'error',
+    message: process.env.NODE_ENV === 'production' 
+      ? 'Internal server error' 
+      : err.message
+  });
 });
 
 // Graceful Shutdown for Prisma
