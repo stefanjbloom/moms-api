@@ -28,4 +28,21 @@ contactRouter.post('/', async (req: Request, res: Response) => {
   }
 });
 
+contactRouter.get('/', async (_req: Request, res: Response) => {
+  try {
+    const contactRequests = await prisma.contactRequest.findMany();
+    res.json(contactRequests);
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+contactRouter.delete('/:id', async (req: Request, res: Response) => {
+  await prisma.contactRequest.delete({
+    where: { id: req.params.id }
+  });
+  res.status(204).send();
+  return;
+});
+
 export default contactRouter;

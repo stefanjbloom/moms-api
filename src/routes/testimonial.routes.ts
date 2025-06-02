@@ -1,11 +1,11 @@
 import express, { Request, Response, Router } from 'express';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 const testimonialRouter: Router = express.Router();
 const prisma = new PrismaClient();
 
 // Get all testimonials
-testimonialRouter.get('/', async (req: Request, res: Response) => {
+testimonialRouter.get('/', async (_req: Request, res: Response): Promise<void> => {
   try {
     const testimonials = await prisma.testimonial.findMany();
     res.json(testimonials);
@@ -15,7 +15,7 @@ testimonialRouter.get('/', async (req: Request, res: Response) => {
 });
 
 // Create a new testimonial
-testimonialRouter.post('/', async (req: Request, res: Response) => {
+testimonialRouter.post('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const testimonial = await prisma.testimonial.create({
       data: req.body

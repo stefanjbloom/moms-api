@@ -14,11 +14,13 @@ async function main() {
             title: "Consultation",
             description: "A one-hour consultation to discuss your needs.",
             price: 100.0,
+            isPublished: true
           },
           {
             title: "Full Service",
             description: "A complete package including consultation and execution.",
             price: 500.0,
+            isPublished: true
           },
         ],
       },
@@ -28,11 +30,13 @@ async function main() {
             title: "Fantastic Service!",
             author: "John Doe",
             content: "I had an amazing experience. Highly recommend!",
+            isPublished: true
           },
           {
             title: "Great Experience",
             author: "Jane Smith",
             content: "Very professional and easy to work with!",
+            isPublished: true
           },
         ],
       },
@@ -41,10 +45,12 @@ async function main() {
           {
             title: "How to Choose the Right Service",
             content: "This is a test content for the blog post.",
+            isPublished: true
           },
           {
             title: "Maximizing Your Investment",
             content: "Here are some tips to get the most value from our services...",
+            isPublished: true
           },
         ],
       },
@@ -57,7 +63,7 @@ async function main() {
   });
 
   // Create an Appointment (linked to the first service)
-  const appointment = await prisma.appointment.create({
+  await prisma.appointment.create({
     data: {
       clientFirstName: "Alice",
       clientLastName: "Johnson",
