@@ -13,7 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Client { // Owner of website (mom)
+model Client {
   id           String        @id @default(uuid())
   name         String
   aboutMe      String
@@ -24,11 +24,12 @@ model Client { // Owner of website (mom)
   blogPosts    BlogPost[]
 }
 
-model Service { // Services offered by Client
+model Service {
   id          String        @id @default(uuid())
   title       String
   description String
   price       Float
+  isPublished Boolean       @default(false)
   Appointment Appointment[] //One-to-many with Appointment model
   Client      Client?       @relation(fields: [clientId], references: [id]) //foreign key pointing to Client model
   clientId    String?
@@ -46,7 +47,7 @@ model Appointment {
   states          String   @default("pending") // could change to "confirmed" or "cancelled"
 }
 
-model ContactRequest { // For Client's clients to contact Client
+model ContactRequest {
   id        String   @id @default(uuid())
   name      String
   email     String
@@ -55,19 +56,21 @@ model ContactRequest { // For Client's clients to contact Client
 }
 
 model Testimonial {
-  id       String  @id @default(uuid())
-  title    String
-  author   String
-  content  String
-  Client   Client? @relation(fields: [clientId], references: [id]) //Relation to Client model
-  clientId String? //Foreign key
+  id          String  @id @default(uuid())
+  title       String
+  author      String
+  content     String
+  isPublished Boolean @default(false)
+  Client      Client? @relation(fields: [clientId], references: [id]) //Relation to Client model
+  clientId    String? //Foreign key
 }
 
 model BlogPost {
-  id        String   @id @default(uuid())
-  title     String
-  content   String
-  Client    Client?  @relation(fields: [clientId], references: [id])//Relation to Client model
-  clientId  String?
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  isPublished Boolean  @default(false)
+  Client      Client?  @relation(fields: [clientId], references: [id]) //Relation to Client model
+  clientId    String?
+  createdAt   DateTime @default(now())
 }

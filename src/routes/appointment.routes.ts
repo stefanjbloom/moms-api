@@ -39,7 +39,7 @@ appointmentRouter.post('/', validateAppointment, async (req: Request, res: Respo
 });
 
 // Get all appointments
-appointmentRouter.get('/', async (req: Request, res: Response) => {
+appointmentRouter.get('/', async (_req: Request, res: Response) => {
   try {
     const appointments = await prisma.appointment.findMany();
     res.json(appointments);
@@ -50,7 +50,7 @@ appointmentRouter.get('/', async (req: Request, res: Response) => {
 });
 
 // Get a specific appointment
-appointmentRouter.get('/:id', async (req: Request, res: Response) => {
+appointmentRouter.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const appointment = await prisma.appointment.findUnique({
       where: { id: req.params.id }
@@ -69,7 +69,7 @@ appointmentRouter.get('/:id', async (req: Request, res: Response) => {
 });
 
 // Update an appointment
-appointmentRouter.put('/:id', validateAppointment, async (req: Request, res: Response) => {
+appointmentRouter.put('/:id', validateAppointment, async (req: Request, res: Response): Promise<void> => {
   try {
     const { clientFirstName, clientLastName, email, phone, date } = req.body;
     const appointment = await prisma.appointment.update({

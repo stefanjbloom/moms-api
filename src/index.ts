@@ -1,6 +1,6 @@
 //Main Starting point for app
 
-import express, { Application, Request, Response, NextFunction, ErrorRequestHandler } from "express";
+import express, { Application, Request, Response, ErrorRequestHandler } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet";
@@ -86,12 +86,12 @@ app.use('/api', apiLimiter);
 app.use("/api", routes);
 
 //Base route check
-app.get("/", (req: Request, res: Response) => {
+app.get("/", (_req: Request, res: Response) => {
   res.json({ message: "API is running" });
 });
 
 // 404 handler for non-existent routes
-app.use('*', (req: Request, res: Response) => {
+app.use('*', (_req: Request, res: Response) => {
   res.status(404).json({ error: 'Resource not found' });
 });
 

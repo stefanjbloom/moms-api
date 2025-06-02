@@ -1,148 +1,148 @@
-import express from 'express';
+import express, { Request, Response, Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { validateClient } from '../validations/client.validation';
 
-const clientRouter = express.Router();
+const clientRouter: Router = express.Router();
 const prisma = new PrismaClient();
 
-// Helper function to get the client ID based on environment
-const getClientId = async () => {
-  console.log('Environment:', process.env.NODE_ENV);
-  console.log('SEEDED_CLIENT_ID:', process.env.SEEDED_CLIENT_ID);
-  
-  // In test environment, always use the first client
-  if (process.env.NODE_ENV === 'test') {
-    const firstClient = await prisma.client.findFirst();
-    console.log('Test environment - First client ID:', firstClient?.id);
-    return firstClient?.id;
-  }
-  
-  // In production, first try to find the seeded client
-  if (process.env.SEEDED_CLIENT_ID) {
-    const seededClient = await prisma.client.findUnique({
-      where: { id: process.env.SEEDED_CLIENT_ID }
-    });
-    console.log('Production - Seeded client found:', !!seededClient);
-    if (seededClient) {
-      return seededClient.id;
-    }
-  }
-  
-  // If no seeded client exists, fall back to the first client
-  const firstClient = await prisma.client.findFirst();
-  console.log('Fallback - First client ID:', firstClient?.id);
-  return firstClient?.id;
-};
-
-clientRouter.get('/', async (req, res) => {
+// Get all clients
+clientRouter.get('/', async (_req: Request, res: Response): Promise<void> => {
   try {
-    console.log('GET /api/client - Starting request');
-    const clientId = await getClientId();
-    console.log('GET /api/client - Client ID:', clientId);
-    
-    if (!clientId) {
-      console.log('GET /api/client - No client ID found');
-      res.status(404).json({ error: 'Client not found' });
-      return;
-    }
+    const clients = await prisma.client.findMany();
+    res.json(clients);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch clients' });
+  }
+});
 
+// Get client by ID
+clientRouter.get('/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
     const client = await prisma.client.findUnique({
-      where: { id: clientId },
-      include: {
-        services: true,
-        testimonials: true,
-        blogPosts: true,
-      },
+      where: { id: req.params.id }
     });
-
     if (!client) {
-      console.log('GET /api/client - Client not found in database');
       res.status(404).json({ error: 'Client not found' });
       return;
     }
-
-    console.log('GET /api/client - Successfully found client');
     res.json(client);
   } catch (error) {
-    console.error('GET /api/client - Error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ error: 'Failed to fetch client' });
   }
 });
 
-clientRouter.put('/', validateClient, async (req, res) => {
+// Create new client
+clientRouter.post('/', validateClient, async (req: Request, res: Response): Promise<void> => {
   try {
-    const clientId = await getClientId();
-    if (!clientId) {
-      res.status(404).json({ error: 'Client not found' });
-      return;
-    }
+    const client = await prisma.client.create({
+      data: req.body
+    });
+    res.status(201).json(client);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create client' });
+  }
+});
 
+// Update client
+clientRouter.put('/:id', validateClient, async (req: Request, res: Response): Promise<void> => {
+  try {
     const client = await prisma.client.update({
-      where: { id: clientId },
-      data: req.body,
+      where: { id: req.params.id },
+      data: req.body
     });
-
     res.json(client);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ error: 'Failed to update client' });
   }
 });
 
-clientRouter.get('/services', async (req, res) => {
+// Delete client
+clientRouter.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
-    const clientId = await getClientId();
-    if (!clientId) {
-      res.status(404).json({ error: 'Client not found' });
-      return;
-    }
-
-    const services = await prisma.service.findMany({
-      where: { clientId },
+    await prisma.client.delete({
+      where: { id: req.params.id }
     });
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete client' });
+  }
+});
 
+// Get all services
+clientRouter.get('/services', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const services = await prisma.service.findMany();
     res.json(services);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ error: 'Failed to fetch services' });
   }
 });
 
-clientRouter.get('/testimonials', async (req, res) => {
+// Get service by ID
+clientRouter.get('/services/:id', async (req: Request, res: Response): Promise<void> => {
   try {
-    const clientId = await getClientId();
-    if (!clientId) {
-      res.status(404).json({ error: 'Client not found' });
+    const service = await prisma.service.findUnique({
+      where: { id: req.params.id }
+    });
+    if (!service) {
+      res.status(404).json({ error: 'Service not found' });
       return;
     }
+    res.json(service);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch service' });
+  }
+});
 
-    const testimonials = await prisma.testimonial.findMany({
-      where: { clientId },
-    });
-
+// Get all testimonials
+clientRouter.get('/testimonials', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const testimonials = await prisma.testimonial.findMany();
     res.json(testimonials);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ error: 'Failed to fetch testimonials' });
   }
 });
 
-clientRouter.get('/blog-posts', async (req, res) => {
+// Get testimonial by ID
+clientRouter.get('/testimonials/:id', async (req: Request, res: Response): Promise<void> => {
   try {
-    const clientId = await getClientId();
-    if (!clientId) {
-      res.status(404).json({ error: 'Client not found' });
+    const testimonial = await prisma.testimonial.findUnique({
+      where: { id: req.params.id }
+    });
+    if (!testimonial) {
+      res.status(404).json({ error: 'Testimonial not found' });
       return;
     }
+    res.json(testimonial);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch testimonial' });
+  }
+});
 
-    const blogPosts = await prisma.blogPost.findMany({
-      where: { clientId },
-    });
-
+// Get all blog posts
+clientRouter.get('/blog-posts', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const blogPosts = await prisma.blogPost.findMany();
     res.json(blogPosts);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ error: 'Failed to fetch blog posts' });
+  }
+});
+
+// Get blog post by ID
+clientRouter.get('/blog-posts/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const blogPost = await prisma.blogPost.findUnique({
+      where: { id: req.params.id }
+    });
+    if (!blogPost) {
+      res.status(404).json({ error: 'Blog post not found' });
+      return;
+    }
+    res.json(blogPost);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch blog post' });
   }
 });
 
