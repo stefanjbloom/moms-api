@@ -1,0 +1,35 @@
+import request from 'supertest';
+import { app } from '../index';
+import { PrismaClient } from '@prisma/client';
+import '../__tests__/setup';
+
+const prisma = new PrismaClient();
+
+describe('Contact Request Routes', () => {
+  //Test data
+  const testContactRequest = {
+    name: 'John Doe',
+    email: 'john.doe@example.com',
+    message: 'This is a test message'
+  };
+  describe('POST /api/contact', () => {
+    it('should create a new contact request', async () => {
+      const response = await request(app).post('/api/contact').send(testContactRequest);
+      expect(response.status).toBe(201);
+      expect(response.body.name).toBe(testContactRequest.name);
+      expect(response.body.email).toBe(testContactRequest.email);
+      expect(response.body.message).toBe(testContactRequest.message);
+    });
+  });
+
+  describe('GET /api/contact', () => {
+    it('should get all contact requests', async () => {
+      await prisma.contactRequest.create({
+        data: testContactRequest
+      });
+      const response = await request(app).get('/api/contact');
+      expect(response.status).toBe(200);
+      expect(response.body).toBeInstanceOf(Array);
+    });
+  });
+});
