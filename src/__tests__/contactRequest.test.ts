@@ -32,4 +32,15 @@ describe('Contact Request Routes', () => {
       expect(response.body).toBeInstanceOf(Array);
     });
   });
+
+  describe('DELETE /api/contact/:id', () => {
+    it('should delete a contact request', async () => {
+      const contactRequest = await prisma.contactRequest.create({
+        data: testContactRequest
+      });
+      
+      const response = await request(app).delete(`/api/contact/${contactRequest.id}`);
+      expect(response.status).toBe(204);
+    });
+  });
 });

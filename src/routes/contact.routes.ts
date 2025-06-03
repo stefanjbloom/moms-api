@@ -1,25 +1,23 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { contactSchema } from '../validations/contact.validation';
 
 const contactRouter = express.Router();
 const prisma = new PrismaClient();
 
-interface ContactRequestBody {
-  name: string;
-  email: string;
-  message: string;
-}
-
 contactRouter.post('/', async (req: Request, res: Response) => {
-  const { name, email, message } = req.body as ContactRequestBody;
+  const { error, value } = contactSchema.validate(req.body, { abortEarly: false });
 
-  if (!name || !email || !message) {
-    res.status(400).json({ message: 'All fields are required' });
+  if (error) {
+    res.status(400).json({ 
+      message: error.details[0].message 
+    });
+    return;
   }
 
   try {
     const contactRequest = await prisma.contactRequest.create({
-      data: { name, email, message },
+      data: value,
     });
     res.status(201).json(contactRequest);
   } catch (error) {
@@ -42,7 +40,6 @@ contactRouter.delete('/:id', async (req: Request, res: Response) => {
     where: { id: req.params.id }
   });
   res.status(204).send();
-  return;
 });
 
 export default contactRouter;
